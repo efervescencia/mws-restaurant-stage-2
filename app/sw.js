@@ -5,11 +5,11 @@
 '/', 
 'index.html',
 'restaurant.html',
-'/css/styles.css',
-'/js/main.js',
-'/js/restaurant_info.js',
-'/js/dbhelper.js',
-'/img/',
+'css/styles.css',
+'js/main.js',
+'js/restaurant_info.js',
+'js/dbhelper.js',
+'img/',
 ];
 
 self.addEventListener('install', function(event) {
