@@ -16,7 +16,7 @@ class DBHelper {
   	
   	//puerto cambiado a node server 1337
     const port = 1337 // Change this to your server port
-    return `http://localhost:${port}/data/restaurants.json`;
+    return `http://localhost:${port}/restaurants`;
   }
 
   /**
@@ -24,12 +24,10 @@ class DBHelper {
    */
     static fetchRestaurants(callback) {
        
-       
-
     fetch(DBHelper.DATABASE_URL)
       .then(response => {
         if (!response.ok) {
-          throw Error(`Error on request. STatus: ${response.statusText}`);
+          throw Error(`Error on request. Status: ${response.statusText}`);
         }
         const restaurants = response.json();
         return restaurants;
