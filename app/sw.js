@@ -1,5 +1,5 @@
-if (typeof idb === "undefined") {
-        self.importScripts('js/idb.js');
+if (typeof nexie === "undefined") {
+        self.importScripts('js/nexie.js');
     }
 
  var CACHE_NAME  = 'mws-cache-v1';
@@ -12,7 +12,7 @@ if (typeof idb === "undefined") {
 'js/restaurant_info.js',
 'img/',
 'js/dbhelper.js',
-'js/idb.js'
+'js/nexie.js'
 ];
 
 self.addEventListener('install', function(event) {
@@ -38,6 +38,53 @@ var dbPromise = idb.open('restaurants',1,function(upgradeDb){
 });
 
 
+
+self.addEventListener('fetch', event => {
+	
+	//que no sea un POST
+  if(event.request.method != 'GET') return;
+  
+  //primero si es un JSON
+  if(event.request.url.includes(':1337')){
+    event.respondWith(fuenteDB(event.request).catch((error) => {
+      console.log(error);
+    }));
+    //ademas actualizo la base de datos
+    event.waitUntil(updateDB(event.request));
+  }else{
+  	//miramos a ver si está en la cache
+    event.respondWith(fromCache(event.request).catch((error) => {
+      console.log(error);
+    }));
+	//actualizamos la cache  
+    event.waitUntil(updateCache(event.request));
+  }
+});
+
+
+function fuenteDB(request){
+  return  dbPromise.urls.get(request.url).then(function (matching) 
+  {
+    return (matching) ? new Response(JSON.stringify(matching.data)) : fetch(request);
+  });
+}
+
+
+function updateDB(request){
+  return fetch(request).then(function (response) {
+    console.log(response);
+    return response.json();
+  }).then( response => {
+    console.log('añadimos:', response);
+    return db.urls.put({ url: request.url, data: response });
+  }).catch(error => {
+    console.log(error);
+  });
+}
+
+
+
+/*
 self.addEventListener('fetch', function(event) {
   event.respondWith(
     caches.match(event.request)
@@ -77,3 +124,4 @@ self.addEventListener('fetch', function(event) {
       })
     );
 });
+*/
