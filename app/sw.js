@@ -1,7 +1,8 @@
-if (typeof nexie === "undefined") {
-        self.importScripts('js/nexie.js');
+if (typeof dexie === "undefined") {
+        self.importScripts('js/dexie.js');
     }
 
+ var dbPromise = null;
  var CACHE_NAME  = 'mws-cache-v1';
  var urlsToCache = [
 '/', 
@@ -12,7 +13,7 @@ if (typeof nexie === "undefined") {
 'js/restaurant_info.js',
 'img/',
 'js/dbhelper.js',
-'js/nexie.js'
+'js/dexie.js'
 ];
 
 self.addEventListener('install', function(event) {
@@ -28,13 +29,12 @@ self.addEventListener('install', function(event) {
 
 self.addEventListener('activate', function(event) {
 console.log("service worker atctivated a true");
-
-var dbPromise = idb.open('restaurants',1,function(upgradeDb){
-
-	var keyValStore = upgradeDb.createObjectStore('urls');
-
-});
-
+// iniciamos base de datos
+	dbPromise = new Dexie("restaurants");
+	dbPromise.version(1).stores({
+	urls: 'url,data'
+	});
+	dbPromise.open();
 });
 
 
@@ -45,20 +45,22 @@ self.addEventListener('fetch', event => {
   if(event.request.method != 'GET') return;
   
   //primero si es un JSON
-  if(event.request.url.includes(':1337')){
+  if(event.request.url.includes(':1337'))
+  		{
     event.respondWith(fuenteDB(event.request).catch((error) => {
       console.log(error);
     }));
     //ademas actualizo la base de datos
     event.waitUntil(updateDB(event.request));
-  }else{
+	  }
+  else{
   	//miramos a ver si está en la cache
-    event.respondWith(fromCache(event.request).catch((error) => {
+    event.respondWith(fuenteCache(event.request).catch((error) => {
       console.log(error);
     }));
 	//actualizamos la cache  
     event.waitUntil(updateCache(event.request));
-  }
+  	}
 });
 
 
@@ -76,11 +78,31 @@ function updateDB(request){
     return response.json();
   }).then( response => {
     console.log('añadimos:', response);
-    return db.urls.put({ url: request.url, data: response });
+    return dbPromise.urls.put({ url: request.url, data: response });
   }).catch(error => {
     console.log(error);
   });
 }
+
+
+function fuenteCache(request) {
+  return caches.open(CACHE_NAME).then(function (cache) {
+    return cache.match(request).then(function (matching) {
+    	//Si esta en cache la develvemos y sino la pedimos a internet
+      return matching || fetch(request);  
+    });
+  });
+}
+
+function updateCache(request) {
+  return caches.open(CACHE_NAME).then(function (cache) {
+    return fetch(request).then(function (response) {
+      return cache.put(request, response);
+    });
+  });
+}
+
+
 
 
 
