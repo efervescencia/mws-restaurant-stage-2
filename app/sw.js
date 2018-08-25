@@ -1,4 +1,6 @@
-
+if (typeof idb === "undefined") {
+        self.importScripts('js/idb.js');
+    }
 
  var CACHE_NAME  = 'mws-cache-v1';
  var urlsToCache = [
@@ -8,8 +10,9 @@
 'css/styles.css',
 'js/main.js',
 'js/restaurant_info.js',
-'js/dbhelper.js',
 'img/',
+'js/dbhelper.js',
+'js/idb.js'
 ];
 
 self.addEventListener('install', function(event) {
@@ -23,6 +26,16 @@ self.addEventListener('install', function(event) {
   );
 });
 
+self.addEventListener('activate', function(event) {
+console.log("service worker atctivated a true");
+
+var dbPromise = idb.open('restaurants',1,function(upgradeDb){
+
+	var keyValStore = upgradeDb.createObjectStore('urls');
+
+});
+
+});
 
 
 self.addEventListener('fetch', function(event) {
