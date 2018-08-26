@@ -19,7 +19,7 @@ ul, li {
 	color: #333;
 }
 a {
-	color: orange;
+	color: #150505;
 	text-decoration: none;
 }
 a:hover, a:focus {
@@ -42,7 +42,7 @@ article, aside, canvas, details, figcaption, figure, footer, header, hgroup, men
 }
 #footer {
   background-color: #444;
-  color: #aaa;
+  color: #ddd;
   font-size: 8pt;
   letter-spacing: 1px;
   padding: 25px;
@@ -141,7 +141,7 @@ header h1:hover, h1:focus {
 /* ====================== Restaurant Filtering ====================== */
 .filter-options {
   width: 100%;
-  background-color: #3397DB;
+  background-color: #4497FB;
   align-items: center;
   display: flex;
   flex-wrap: wrap;

@@ -10,7 +10,8 @@ class DBHelper {
   /**
    * Database URL.
    * Change this to restaurants.json file location on your server.
-   */
+   */ 	
+ 	
 
   static get DATABASE_URL() {
   	
@@ -18,22 +19,61 @@ class DBHelper {
     const port = 1337 // Change this to your server port
     return `http://localhost:${port}/restaurants`;
   }
+  
+  
+	
+	//  IndexedDB Promised
+	 
+	static get dbPromise() {
 
-  /**
-   * Fetch all restaurants.
-   */
-    static fetchRestaurants(callback) {
-       
-    fetch(DBHelper.DATABASE_URL)
-      .then(response => {
-        if (!response.ok) {
-          throw Error(`Error on request. Status: ${response.statusText}`);
-        }
-        const restaurants = response.json();
-        return restaurants;
-      })
-      .then(restaurants => callback(null, restaurants))
-.catch(err => callback(err, null));
+			return idb.open('restaurants', 1, function (upgradeDb) {
+				upgradeDb.createObjectStore('restaurants', { keyPath: 'id' });
+			});
+	}
+
+	/**
+	 * Fetch all restaurants.
+	 */
+	static fetchRestaurants(callback) {
+		
+		DBHelper.dbPromise.then(db => {
+			if (!db) return;
+			
+			// db with elements?
+			const tx = db.transaction('restaurants');
+			const store = tx.objectStore('restaurants');
+			
+			store.getAll().then(datos => {
+				if (datos.length > 0) 
+				{
+					// estan en la BD, la devolvemos
+					callback(null, datos);
+				}
+			else 
+				{
+					// los sacamos de internet
+					fetch(`${DBHelper.DATABASE_URL}`)
+					.then(response => {
+					return response.json();
+					})
+					.then(restaurants => {
+					// Ademas los metemos a la DB
+					const tx = db.transaction('restaurants', 'readwrite');
+					const store = tx.objectStore('restaurants');
+					restaurants.forEach(restaurant => {
+					store.put(restaurant);
+					})
+					callback(null, restaurants);
+					})
+					.catch(error => {
+					// Error en internet
+					callback(error, null);
+					});					
+				} 	
+			})	
+		});
+	}
+	
 
 /*    ANTIGUO XMLHttpRequest()
 
@@ -53,7 +93,6 @@ class DBHelper {
 
 */
 
-}
 
   /**
    * Fetch a restaurant by its ID.
